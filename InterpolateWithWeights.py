@@ -29,9 +29,6 @@ UseUnixTime=True
 nargin = len(sys.argv) - 1
 
 flin=sys.argv[1]
-
-IsVel=(flin[-6:-3]=="vel")
-
 mshfl=sys.argv[2]
 meshslash=mshfl.rfind('/')+1
 weights_file="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".nc"
@@ -68,10 +65,13 @@ xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nni=len(xi)
 
 data = nc.Dataset(flin,"r")
-if UseUnixTime:
-    time=iutil.ConvertTimeToUnixTime(flin)
+if "time" in data.variables:
+    time=iutil.ConvertTimeToUnixTime(flin,"time")
+else if "MT" in data.variables:
+    time=iutil.ConvertTimeToUnixTime(flin,"MT")
 else:
-    time=np.asarray(data["time"][:])
+    print("No time variable found in "+flin+" EXITING")
+    sys.exit(1)
 
 x=np.asarray(data["x"][:])
 #shift to RWPS convention
@@ -81,6 +81,7 @@ y=np.asarray(data["y"][:])
 
 n1=len(x)
 nt=len(time)
+
 #nt=4
 #time=time[0:nt]
 
@@ -96,7 +97,6 @@ if ExtrapMethod==3:
     AnyExtrap=np.zeros((nvar,nni),dtype=int)
 
 nan=float("nan")
-    
 for jv in range(nvar):
     fill_value0=data[varname[jv]]._FillValue
     print("fill value="+str(fill_value0))

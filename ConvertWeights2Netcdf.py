@@ -10,10 +10,11 @@ flin=sys.argv[1]
 mshfl=sys.argv[2]
 meshslash=mshfl.rfind('/')+1
 
-AddExtrapolationSupport=False
-if nargin==3:
-    if int(sys.argv[3])>0:
-        AddExtrapolationSupport=True
+#AddExtrapolationSupport=False
+AddExtrapolationSupport=True
+#if nargin==3:
+#    if int(sys.argv[3])>0:
+#        AddExtrapolationSupport=True
 
 TextWeightFl="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".txt"
 flout="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".nc"
@@ -95,27 +96,3 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
         ydst_var.long_name     = 'interpolation destination node latitude'
         ydst_var[:]=yi[:]
    
-
-
-"""
-with xr.open_dataset(weights_file) as ds_s:
-   # Standard sparse storage uses 'row', 'col', and 'data' variables
-   row = ds_s['row'].values
-   col = ds_s['col'].values
-   weights = ds_s['S'].values
-   Nrows=ds_s.attrs.get('Nrows')
-   Ncols=ds_s.attrs.get('Ncols')
-   
-print("nn = "+str(nn)+": Nrows = "+str(Nrows))
-print("n1 = "+str(n1)+": Ncols = "+str(Ncols))
-if not ((nn==Nrows) and (n1==Ncols)):
-    print("Wrong matrix weights: number of rows from "+ mshfl +" = "+str(nn)+
-    " but number of rows in "+ weights_file +" = "+str(Nrows)+ 
-    ", number of spatial points in "+ flin +" = "+str(n1)+ 
-    " but number of columns in "+ weights_file +" = "+str(Ncols)  )
-    print("  You probably need to remove file "+ weights_file +" and rerun to generate appropriate weights")
-
-matrix = sp.coo_matrix((weights, (row-1, col-1)), shape=(nn,n1)).tocsr()
-print("sparse interpolation matrix")
-print(matrix)
-"""
