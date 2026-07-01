@@ -30,11 +30,12 @@ python ComputeUnstrToRWPSInterpWeights.py $filein $meshfile $Nprocs
 
 ## Now run parallel job script
 ## sbatch jobcardComputeUnstrToRWPSInterpWeightsSLURM
-sbatch jobcardComputeUnstrToRWPSInterpWeightsPBS
+qsub jobcardComputeUnstrToRWPSInterpWeightsPBS
 wait;
 
 ## Now knit output from parallel job together and write to netcdf format
 ## The third argument "1" indicates to write (x,y) for destination and source nodes
 ## to support extrapolation
+
 python ConvertWeights2Netcdf.py $filein $meshfile 1
 

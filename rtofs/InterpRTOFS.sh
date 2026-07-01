@@ -32,7 +32,7 @@ tmpdir="tmp.rtofs.$date"
 filesin="/lfs/h1/ops/prod/com/rtofs/v2.5/rtofs.$date/*prog.nc"
 
 flin="rtofs.$date.nc"
-flout_rwps="$meshname.rtofs.$date.nc"
+flout_rwps="$meshname.$date.rtofs.nc"
 flwhgts="../InterpolationWeights.$meshname.rtofs.nc"
 
 echo "python ../InterpolateWithWeights.py $flin $flwhgts $flout_rwps $varnames -1"
