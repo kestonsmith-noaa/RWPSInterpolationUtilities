@@ -119,7 +119,7 @@ else:
     u0[j0]=nan
     dist2bnd=iutil.CalculateDistanceToInterpEnvelope(xi,yi,u0, 1.)
 
-dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-3]+".stofs.nc"
+dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-4]+".stofs.nc"
 with nc.Dataset(dist2bnd_file, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('node' , nn_dst)
     d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
