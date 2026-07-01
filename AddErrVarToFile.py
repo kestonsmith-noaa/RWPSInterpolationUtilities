@@ -17,15 +17,18 @@ VarParam=VarParam0.split(":")
 data=nc.Dataset(dist2bnd_file,"r")
 dist2bnd=np.array(data["dist2bnd"][:])
 zi=np.array(data["depth"][:])
+nn=len(dist2bnd)
 data.close()
+
 
 VariableType="WaterLevel"
 if "wind" in flinout:
     VariableType="Wind"
 elif "uv" in flinout:
     VariableType="Current"
+elif "vel" in flinout:
+    VariableType="Current"
 
-nn=len(dist2bnd)
 
 if VariableType=="Current":
     VarShallow=float(VarParam[0]) # variance (m/s)**2 for shallow regions
@@ -34,8 +37,8 @@ if VariableType=="Current":
     BatDeep=float(VarParam[3]) # isobath (m) for deep regions
     if "stofs" in flinout:
 #            Variance = iutil.VarianceLinearDepth(zi,1.,100.,50.,250.)
-        Variance = iutil.VarianceLinearDepth(zi,VarShallow,VarDeep,BatShallow,BatDeep)
-    if "rtofs" in flinnout: #variance high in shallows and near boundary of coverage
+        Variance = iutil.VarianceLinearDepth (zi, VarShallow, VarDeep, BatShallow, BatDeep)
+    if "rtofs" in flinout: #variance high in shallows and near boundary of coverage
 #            VarianceDepth = iutil.VarianceLinearDepth(zi,100.,1.,50.,250.)
         VarianceDepth = iutil.VarianceLinearDepth(zi,VarShallow,VarDeep,BatShallow,BatDeep)
         VarLambda= float(VarParam[4])  # lengthscale (km) for linear transition from bounadry variance(==VarShallow) to interior variance(==VarDeep)
@@ -43,7 +46,7 @@ if VariableType=="Current":
         Variance = np.maximum(VarianceDepth, VarianceBnd)
 
 if VariableType=="WaterLevel":
-    if "stofs" in flinnout:
+    if "stofs" in flinout:
 #            Variance = 1.+0*zi
         VarInterior=float(VarParam[0]) # variance (m)**2 for stofs water level
         Variance = VarInterior+0.*zi

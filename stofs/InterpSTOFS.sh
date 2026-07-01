@@ -42,11 +42,11 @@ flwhgts="../InterpolationWeights.$meshname.stofs.nc"
 ## [ ! -f "$interpwghts" ] && sh ../ComputeUnstrToRWPSInterpWeights.sh $stofsele $mesh $Nprocs
 
 flin="stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.nc"
-flout_rwps="$meshname.$date.cwl.stofs.nc"
+flout_rwps="$meshname.$date.$cycl.cwl.stofs.nc"
 python ../InterpolateWithWeights.py $flin $flwhgts $flout_rwps $waterlevelvarnames 0
 
 flin="stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.vel.nc"
-flout_rwps="$meshname.$date.vel.cwl.stofs.nc"
+flout_rwps="$meshname.$date.$cycl.vel.cwl.stofs.nc"
 python ../InterpolateWithWeights.py $flin $flwhgts $flout_rwps $velvarnames 0
 
 
