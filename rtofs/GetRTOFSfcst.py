@@ -3,6 +3,11 @@ import numpy as np
 import os
 import netCDF4 as nc
 import sys
+
+# Get the path relative to this file and add to sys.path
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+#import helper
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import InterpUtilities as  iutil
 
 dirin=sys.argv[1]
