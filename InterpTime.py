@@ -50,8 +50,8 @@ print("e")
 print(e)
 print(e.shape)
 nn=len(x)
-ne=e.shape[0]
-noel=e.shape[1]
+ne=e.shape[1]
+noel=e.shape[0]
 
 InterpolatedVariables=np.zeros((nvar,nt,nn))
 for jv in range(nvar):
@@ -103,15 +103,10 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
 
     time_var0=data0["time"]
     time_var=ncout.createVariable('time', 'f8', ('time',))
-    time_var.units          = time_var0.units
-    time_var.long_name      = time_var0.long_name
-    time_var.standard_name  = time_var0.standard_name
-    time_var.axis           = time_var0.axis
-    time_var.reference_time = time_var0.reference_time
-    time_var.reference_date = time_var0.reference_date
+    iutil.CopyAttributes(time_var0, time_var)
     time_var[:]=tf[:]
 
-    tri_var=ncout.createVariable('tri', 'i4', ('element','noel'))
+    tri_var=ncout.createVariable('tri', 'i4', ('noel','element',))
     tri_var.long_name     = 'element list'
     tri_var.standard_name = 'element list'
     tri_var[:,:]=e
@@ -122,14 +117,4 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
         f_var=ncout.createVariable(varname[jv], 'f4', ('time','node'))
         iutil.CopyAttributes(var, f_var)
         f_var[:,:]=InterpolatedVariables[jv,:,:]
-"""        
-        att_names = var.ncattrs()
-        for jatt in range(len(att_names)):
-            att_name=att_names[jatt]
-            if (not (att_name=="_FillValue")):
-                att_value = var.getncattr(att_name)
-                print(att_name+" : ")
-                print(att_value)
-                f_var.setncattr(att_name, att_value)
-"""    
     ncout.close

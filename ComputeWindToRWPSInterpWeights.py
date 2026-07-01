@@ -27,8 +27,6 @@ import InterpUtilities as iutil
 
 
 # Main program
-#AddExtrapolationSupport=False
-AddExtrapolationSupport=True
 
 nargin = len(sys.argv) - 1
 
@@ -45,68 +43,48 @@ if nargin > 2:
 
 xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nn=len(xi)
-#shift coords to[129,370]
-#if np.mean(xi)<0.:
-    #xi=xi+360.
+
+if np.mean(xi)<0:
+	xi=xi+360.
+
 data = nc.Dataset(flin,"r")
 #read spaital dimensions and determine if input mesh is curvilinear or regular
 x1=np.asarray(data["longitude"][:])
 y1=np.asarray(data["latitude"][:])
-
-# shift to common longitude
-#if np.mean(np.mean(x1))<0:
-#    x1=x1+360.
-#   rwps        :[-231, 11]
-#   nbm         :[129, 370]
-#   rrfs,pr     :[ -75.5000  -62.5087]
-#   rrfs,hi     :[ -161.5250 -153.8690]
-#   rrfs,ak     :[150.2012  266.2886]
-#   rrfs,na     :[67.5721  427.0000]
-#   rrfs,conus  :[ 225.9045  299.0828]
-#   rtofs,glo   :[74.1552,434.0146]
-#   stofs, glo  :[-180,180]
-#
-
-#Shift longitude coordinates to RWPS specs for various files
-if "hi" in flin:
-    x1=x1+360.
-if "pr" in flin:
-    x1=x1+360.
-
-if "rtofs" in flin: #remove bad geometry edges
-    x1=x1[1:-1,1:-1]
-    y1=y1[1:-1,1:-1]
-    x1=x1-360.
-
 if (len(x1.shape)==2 and len(y1.shape)==2):
     IsCrvLn=True
 elif (len(x1.shape)==1 and len(y1.shape)==1):
-    #represent regular grid as curvilinear grid
     IsCrvLn=False
-    nx=len(x1)
-    ny=len(y1)
-    x1 = np.tile(x1,(ny,1))
-    y1 = np.tile(y1,(nx,1)).T
-    IsCrvLn=True
 else:
-    print("input file spatial dimension is not recognized. ending program")
+    print("input file spatial dimension is not right. ending program")
     sys.exit()
-    
+# shift to common longitude
+if np.mean(np.mean(x1))<0:
+    x1=x1+360.
+
 #######################################
 # === Create weights  ===#
 #######################################
+
 meshslash=mshfl.rfind('/')+1
 dom=flin.split(".")
 dom=dom[len(dom)-2]
 weights_file = "InterpolationWeights."+mshfl[meshslash:len(mshfl)-3]+dom+".nc"
 print("interpolation weights will be written to file = "+ weights_file)
 
-nx=x1.shape[0]
-ny=x1.shape[1]
+if IsCrvLn:
+    nx=x1.shape[0]
+    ny=x1.shape[1]
+else:
+    nx=len(x1)
+    ny=len(y1)
 n1=nx*ny
 
 print("Computing weights and saving to file: "+ weights_file)
 
+if not IsCrvLn:
+    x1 = np.tile(x1,(ny,1))
+    y1 = np.tile(y1,(nx,1)).T
 #Use esmpy to construct bilinear interpolation weights
 iutil.CurvilinearGridCreateInterpWeights(xi, yi, x1, y1, weights_file)
 
@@ -135,11 +113,13 @@ print(matrix)
 ##################################################################################
 # START: Extrapolate for nodes not covered by interpolator
 ##################################################################################
-x1v=np.transpose(x1).reshape(n1) # vectorize src nodes, consistant with data to interpolate
-y1v=np.transpose(y1).reshape(n1)
-
 if Extrapolate:
     from scipy.interpolate import NearestNDInterpolator
+    if not IsCrvLn:
+        x1 = np.tile(x1,(ny,1))
+        y1 = np.tile(y1,(nx,1)).T
+    x1v=np.transpose(x1).reshape(n1) # vectorize src nodes, consistant with Up, Vp
+    y1v=np.transpose(y1).reshape(n1)
     srcp = np.array((x1v,y1v)).T
     srcv = 1.+x1v**2 + y1v**2 #dummy input field
     #dstv = matrix @ srcv.T
@@ -153,43 +133,13 @@ if Extrapolate:
     rowExtrp=np.concatenate( (row, np.array(j0)) )
     colExtrp=np.concatenate( (col, np.array(j0src)) )
     weightsExtrp=np.concatenate( (weights, np.array([1.0] * len(j0))) )
+    
     os.replace(weights_file, "NoExtrap."+weights_file)
     iutil.WriteInterpolationWeightsToNetCDF(weights_file,rowExtrp,colExtrp,weightsExtrp,len(xi),len(x1v))
+
 ##################################################################################
 # FINISHED: Extrapolate for nodes not covered by interpolator
 ##################################################################################
-
-##################################################################################
-# START: Extrapolation support for NaN occurances in source field
-##################################################################################
-if AddExtrapolationSupport:
-    with nc.Dataset(weights_file, 'r+', format='NETCDF4') as ncadd:
-        ncadd.createDimension('nn_src' , len(x1v))
-        ncadd.createDimension('nn_dst' , len(xi))
-        
-        xsrc_var=ncadd.createVariable('x_src', 'f8', ('nn_src',))
-        xsrc_var.long_name     = 'interpolation source node longitude'
-        xsrc_var[:]=x1v[:]
-        
-        ysrc_var=ncadd.createVariable('y_src', 'f8', ('nn_src',))
-        ysrc_var.long_name     = 'interpolation source node latitude'
-        ysrc_var[:]=y1v[:]
-        
-        xdst_var=ncadd.createVariable('x_dst', 'f8', ('nn_dst',))
-        xdst_var.long_name     = 'interpolation destination node longitude'
-        xdst_var[:]=xi[:]
-    
-        ydst_var=ncadd.createVariable('y_dst', 'f8', ('nn_dst',))
-        ydst_var.long_name     = 'interpolation destination node latitude'
-        ydst_var[:]=yi[:]
-        
-##################################################################################
-# FINISHED: Extrapolation support for NaN occurances in source field
-##################################################################################
-with nc.Dataset(weights_file, 'r+', format='NETCDF4') as ncadd:
-    ncadd.setncattr("SrcFieldType", "gridded")
-    ncadd.setncattr("InputFile", flin)
-    ncadd.setncattr("MeshFile", mshfl)
 
 ##################################################################################
 # START: Compute distance to boundary for each node in mesh:
@@ -215,10 +165,4 @@ with nc.Dataset(dist2bnd_file, 'w', format='NETCDF4') as ncout:
     d_var.units         = 'km'
     d_var.standard_name = 'distance to boundary'
     d_var[:]=dist2bnd[:]
-    
-    z_var=ncout.createVariable('depth', 'f4', ('node',))
-    z_var.long_name     = 'mesh depth'
-    z_var.units         = 'm'
-    z_var.standard_name = 'depth'
-    z_var[:]=zi[:]
 

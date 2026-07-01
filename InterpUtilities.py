@@ -25,7 +25,11 @@ def ConvertTimeToUnixTime(flin,TimeVarName = None):
     dstr=dstr.split("-")
     tstr=TimeUnitsStrings[3]
     tstr=tstr.split(":")
-    base_date = datetime(int(dstr[0]),int(dstr[1]),int(dstr[2]),int(tstr[0]),int(tstr[1]),int(tstr[2]))
+    print(dstr)
+    print(tstr)
+    secstr=tstr[2].rsplit(".", 1)[0]
+    base_date = datetime(int(dstr[0]),int(dstr[1]),int(dstr[2]),int(tstr[0]),int(tstr[1]),int(secstr))
+    #base_date = datetime(int(dstr[0]),int(dstr[1]),int(dstr[2]),int(tstr[0]),int(tstr[1]),int(tstr[2]))
     base_offset = int((base_date - epoch_1970).total_seconds())
     if tunits=="seconds":
         unix_time = time + base_offset
@@ -292,6 +296,7 @@ def CurvilinearGridCreateInterpWeights(xi,yi,x1,y1, weights_file):
       dst_field,
       filename=weights_file,
       regrid_method=esmpy.RegridMethod.BILINEAR,
+      ignore_degenerate=True, # <--- Add this parameter
       unmapped_action=esmpy.UnmappedAction.IGNORE # Optional: Ignores missing/masked points
     )
 #Add number of rows and columns to weights file for clarity when constructing sparse matrix for interpolation
@@ -376,7 +381,8 @@ def QuickDistance(lat1, lon1, lats2, lons2):
     d= np.min(  np.sqrt( (  (lat1-lats2)*deg2kmY)**2 + ((lon1-lons2)*deg2kmX)**2 )  )
     return d
 
-def VarianceLinearDistanceToBndy(InteriorNodeList, DistanceToBoundary, InteriorVariance, VarianceOnBoundary, LengthScale):
+def VarianceLinearDistanceToBndy(DistanceToBoundary, InteriorVariance, VarianceOnBoundary, LengthScale):
+    InteriorNodeList=np.where(DistanceToBoundary**2 >= 0 )
     Variance=np.zeros(len(DistanceToBoundary))+np.inf
     SpatialFunction=DistanceToBoundary/LengthScale
     j=np.where(SpatialFunction>1.)
@@ -384,12 +390,21 @@ def VarianceLinearDistanceToBndy(InteriorNodeList, DistanceToBoundary, InteriorV
     Variance[InteriorNodeList] = VarianceOnBoundary + ( InteriorVariance - VarianceOnBoundary ) * SpatialFunction[InteriorNodeList]
     return Variance
 
-def VarianceInverseDistanceToBndy(InteriorNodeList, DistanceToBoundary, InteriorVariance, LengthScale):
+def VarianceInverseDistanceToBndy( DistanceToBoundary, InteriorVariance, LengthScale):
+    InteriorNodeList=np.where(DistanceToBoundary**2 >= 0 )
     Variance=np.zeros(len(DistanceToBoundary))+np.inf
     SpatialFunction=LengthScale / DistanceToBoundary
     j=np.where(SpatialFunction>1.)
     SpatialFunction[j]=1.
     Variance[InteriorNodeList] = InteriorVariance  * SpatialFunction[InteriorNodeList]
+    return Variance
+
+def VarianceLinearDepth(zi,VarianceShallow,VarianceDeep,Zshallow,Zdeep):        
+    Variance = VarianceShallow + (VarianceDeep-VarianceShallow)*(zi-Zshallow)/(Zdeep-Zshallow)
+    js=np.where(zi<Zshallow)
+    jd=np.where(zi>Zdeep)
+    Variance[js]=VarianceShallow
+    Variance[jd]=VarianceDeep
     return Variance
 
 import numpy as np
@@ -684,29 +699,6 @@ def WriteInterpJobscriptPBS(fl,flin,mshfl,Njobs, ComputeNodes):
 
         f.write("pip list -v\n")
 
-
-
-        #yi[k]=float(values[4])
-        f.write("#!/bin/bash \n")
-        f.write("#SBATCH --job-name=STOFS_interp_masterscript \n")
-#        f.write("#SBATCH --ntasks="+str(N)+" \n")
-        f.write("#SBATCH --ntasks=1 \n") # ntasks per interpolation
-        f.write("#SBATCH --time=08:00:00 \n") 
-        f.write("#SBATCH --output=mpi_test_%j.log \n")
-        f.write("#SBATCH --error=%j.err \n")
-        f.write("#SBATCH --account=marine-cpu \n")
-        f.write("#SBATCH --nodes="+str(ComputeNodes)+" \n")
-        f.write("#SBATCH --ntasks-per-core=1"+" \n")
-        f.write("#SBATCH --array=0-"+str(Njobs-1)+" \n")
-
-        f.write(" \n")
-
-        f.write("module purge \n")
-        f.write("module use /scratch4/NCEPDEV/marine/Ali.Salimi/Hera_Data/HR4-OPT/FromJessica/Keston/ICunstructuredRuns15km-implicit-450s/global-workflow/sorc/ufs_model.fd/modulefiles \n")
-        f.write("module load ufs_ursa.intel \n")
-        f.write("module load py-scipy/1.14.1 \n")
-        f.write("module load py-netcdf4/1.7.1.post2 \n")
-        f.write("pip list \n")
         f.write("# calculate interpolation weights in parallel geographically \n")
         f.write("srun python GeoSubsetInterpolateSTOFS.py "+flin+" "+mshfl+" $SLURM_ARRAY_TASK_ID " + str(Njobs)+" > InterpJob.$SLURM_ARRAY_TASK_ID.out \n")
         f.write("wait\n")
@@ -716,7 +708,7 @@ def WriteInterpJobscriptPBS(fl,flin,mshfl,Njobs, ComputeNodes):
         f.write("python ConvertWeights2Netcdf.py "+flin+" "+mshfl+" \n")
 
 
-def WriteInterpJobscriptSlurm(fl,flin,mshfl,Njobs, ComputeNodes):
+def WriteInterpJobscriptSLURM(fl,flin,mshfl,Njobs, ComputeNodes):
     
     meshslash=mshfl.rfind('/')+1
     TmpOutDir="STOFSInterpWeights."+mshfl[meshslash:len(mshfl)-4]

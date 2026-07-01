@@ -22,16 +22,16 @@ if nargin ==3 :
         os.remove(TmpOutDir+"/*.txt")
     except:
         print("directory "+TmpOutDir+" is alread empty")
-    iutil.WriteInterpJobscript("jobcardComputeUnstrToRWPSInterpWeights",flin,mshfl,Njobs, 1)
-    print("Made parallel jobcard to create interpolation weights with "+str(Njobs)+" processes. Next step:")
-    print("sbatch jobcardComputeUnstrToRWPSInterpWeights")
+    iutil.WriteInterpJobscriptPBS("jobcardComputeUnstrToRWPSInterpWeightsPBS",flin,mshfl,Njobs, 1)
+    iutil.WriteInterpJobscriptSLURM("jobcardComputeUnstrToRWPSInterpWeightsSLURM",flin,mshfl,Njobs, 1)
+    print("Made parallel jobcards to create interpolation weights with "+str(Njobs)+" processes. Next step:")
+    print("sbatch jobcardComputeUnstrToRWPSInterpWeightsSLURM")
     sys.exit()
 
 #if nargin==4 then do the part of the mesh for jobID of Njobs
 if nargin == 4:
     jobID=int(sys.argv[3])
     Njobs=int(sys.argv[4])
-    
 
 #if nargin==6 then do the interpolation weight calculation for a specified window
 else:
@@ -54,12 +54,17 @@ print("saving output to:"+weights_file)
 
 xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nni=len(xi)
+j=np.where(xi>90.) # should be empty
+xi[j]=xi[j]-360.
+#if np.mean(xi)<0.:
+#	xi=xi+360.
 
 # divide domain from east west based on job id=0 ... Njobs
 # and make North-South window contain the full target domain
 # NOTE: for efficiency the sections of the domain should have approximately
 # the same number of destination nodes and/or the same number of source elements
 # will implement as function shortly
+
 if nargin <  5:
 # balance node load for     
     xis=np.sort(xi)
@@ -79,16 +84,14 @@ if nargin <  5:
 data = nc.Dataset(flin,"r")
 #read spaital dimensions and determine if input mesh is curvilinear or regular
 x=np.asarray(data["x"][:])
+j=np.where(xi>90.) #elements broken here should not effect RWPS interpolation
+xi[j]=xi[j]-360.
+	
 y=np.asarray(data["y"][:])
 e=np.asarray(data["element"][:,:])
 
-#transform to match RWPS coordinates [-230W to +10E]
-xp=x
-j=np.where(xp>90.)
-xp[j]=xp[j]-360.
-
 e0=e-1
-xc = np.mean(xp[e0], axis=1)
+xc = np.mean(x[e0], axis=1)
 yc = np.mean(y[e0], axis=1)
 
 nn=len(x)
@@ -120,7 +123,7 @@ je=list( set(jxU) & set(jxD)  & set(jyU)   & set(jyD)  )
 print("number of target nodes for this region = "+str(len(ji)))
 print("number of source elements in this region = "+str(len(je)))
 
-weights, nodes, elenum, Dist2EleCenter=iutil.compute_mesh_to_mesh_interp_weights(xp, y, e[je,:], xi[ji], yi[ji])
+weights, nodes, elenum, Dist2EleCenter=iutil.compute_mesh_to_mesh_interp_weights(x, y, e[je,:], xi[ji], yi[ji])
 
 #Move back to global index's
 for k in range(len(elenum)):

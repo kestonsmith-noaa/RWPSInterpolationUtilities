@@ -3,6 +3,7 @@ import netCDF4 as nc
 import sys
 import GeoComputeMeshToMeshInterpWeights as mshint
 import InterpUtilities as  iutil
+import scipy.sparse as sp
 
 nargin = len(sys.argv) - 1
 
@@ -12,18 +13,19 @@ meshslash=mshfl.rfind('/')+1
 
 #AddExtrapolationSupport=False
 AddExtrapolationSupport=True
-#if nargin==3:
-#    if int(sys.argv[3])>0:
-#        AddExtrapolationSupport=True
 
 TextWeightFl="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".txt"
-flout="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".nc"
+flout = "InterpolationWeights."+mshfl[meshslash:len(mshfl)-3]+".stofs.nc"
 
-xi, yi, ei = iutil.loadWW3Mesh(mshfl)
+xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nn_dst=len(xi)
 data = nc.Dataset(flin,"r")
 #read spaital dimensions and determine if input mesh is curvilinear or regular
 x=np.asarray(data["x"][:])
+#convert to RWPS coordinates
+jEast=np.where(x>90)
+x[jEast]=x[jEast]=360.
+
 nn_src=len(x)
 
 #Read in weights from cat of text output(rows are not in order)
@@ -60,6 +62,7 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('n_s' , n_s)
     ncout.setncattr("Nrows", nn_dst)
     ncout.setncattr("Ncols", nn_src)
+    ncadd.setncattr("SrcFieldType", "unstructured") 
     
     r_var=ncout.createVariable('row', 'i4', ('n_s',))
     r_var.long_name     = 'row index'
@@ -95,4 +98,37 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
         ydst_var=ncout.createVariable('y_dst', 'f8', ('nn_dst',))
         ydst_var.long_name     = 'interpolation destination node latitude'
         ydst_var[:]=yi[:]
-   
+
+        zdst_var=ncout.createVariable('depth_dst', 'f8', ('nn_dst',))
+        zdst_var.long_name     = 'interpolation destination node latitude'
+        zdst_var[:]=zi[:]
+
+Extrapolate=False
+
+if Extrapolate:
+    dist2bnd=np.full(len(xi), np.inf) #all points are inside boundary- No boundary with this type of extrapolation
+else:
+    matrix = sp.coo_matrix((weights, (row-1, col-1)), shape=(nn_src,nn_dst)).tocsr()
+    row_sum = matrix.sum(axis=1)
+    j0=np.where( row_sum==0 ) # destination nodes with no coverage from interpolation matrix
+    j0=np.array(j0[0]).tolist()
+    u0=np.ones(xi.shape)
+    nan=float("nan")
+    u0[j0]=nan
+    dist2bnd=iutil.CalculateDistanceToInterpEnvelope(xi,yi,u0, 1.)
+
+dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-3]+".stofs.nc"
+with nc.Dataset(dist2bnd_file, 'w', format='NETCDF4') as ncout:
+    ncout.createDimension('node' , nn)
+    d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
+    d_var.long_name     = 'distance to boundary'
+    d_var.units         = 'km'
+    d_var.standard_name = 'distance to boundary'
+    d_var[:]=dist2bnd[:]
+    
+    z_var=ncout.createVariable('depth', 'f4', ('node',))
+    z_var.long_name     = 'mesh depth'
+    z_var.units         = 'm'
+    z_var.standard_name = 'depth'
+    z_var[:]=zi[:]
+

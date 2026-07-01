@@ -30,7 +30,7 @@ date=$1
 cycl=$2
 mesh=$3
 winddir="forecasts/wind.$date.$cycl"
-
+windvars="UGRD_10maboveground:VGRD_10maboveground"
 # extract mesh name from path
 meshname="${mesh##*/}"
 # remove .msh suffix from mesh name
@@ -59,28 +59,75 @@ rwps_na="$outdir/rrfs.$meshname.$date.$cycl.wind10m.na.nc"
 rwps_ak="$outdir/rrfs.$meshname.$date.$cycl.wind10m.ak.nc"
 rwps_conus="$outdir/rrfs.$meshname.$date.$cycl.wind10m.conus.nc"
 rwps_est="$outdir/rwps.est.$meshname.$date.$cycl.wind10m.nc"
+
 mkdir $outdir
+
+
+##weights_file = "InterpolationWeights."+mshfl[meshslash:len(mshfl)-3]+dom+".nc"
 
 ##LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] # file names
 ##VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # (m m /s /s)
 ##LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] # (km)
+nbm_oc_wghts="InterpolationWeights.$meshname.oc.nc"
+rrfs_hi_wghts="InterpolationWeights.$meshname.hi.nc"
+rrfs_pr_wghts="InterpolationWeights.$meshname.pr.nc"
+rrfs_ak_wghts="InterpolationWeights.$meshname.ak.nc"
+rrfs_na_wghts="InterpolationWeights.$meshname.na.nc"
+rrfs_conus_wghts="InterpolationWeights.$meshname.conus.nc"
 
-#Convert NBM deom speed and direction to u,v
+nbm_oc_dist="DistToBndy.$meshname.oc.nc"
+rrfs_hi_dist="DistToBndy.$meshname.hi.nc"
+rrfs_pr_dist="DistToBndy.$meshname.pr.nc"
+rrfs_ak_dist="DistToBndy.$meshname.ak.nc"
+rrfs_na_dist="DistToBndy.$meshname.na.nc"
+rrfs_conus_dist="DistToBndy.$meshname.conus.nc"
+
+#Convert NBM speed and direction to u,v
 python SpdDir2UVnbm.py $nbm_oc $nbm_oc_uv
 
-python InterpWindToMesh.py $nbm_oc_uv $mesh $rwps_oc 100. 0. 1
-python InterpWindToMesh.py $rrfs_pr $mesh $rwps_pr 4. 150.
-python InterpWindToMesh.py $rrfs_hi $mesh $rwps_hi 4. 200.
-python InterpWindToMesh.py $rrfs_ak $mesh $rwps_ak 9. 500.
-python InterpWindToMesh.py $rrfs_conus $mesh $rwps_conus 16. 1000.
-python InterpWindToMesh.py $rrfs_na $mesh $rwps_na 50. 1500.
+# If the interpolation weights do not already exist for the domains create them
+# also creates distance to boundary used in prescribed error covariance specification
+if [ ! -f "$nbm_oc_wghts" ]; then
+    echo "computing interpolation weights from $nbm_oc_uv to $mesh. Weights be stored in file: $nbm_oc_wghts which should be kept for future use"
+    python ComputeGriddedToRWPSInterpWeights.py $nbm_oc_uv $mesh 1
+fi
+[ ! -f "$rrfs_hi_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_hi $mesh
+[ ! -f "$rrfs_pr_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_pr $mesh
+[ ! -f "$rrfs_ak_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_ak $mesh
+[ ! -f "$rrfs_na_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_na $mesh
+[ ! -f "$rrfs_conus_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_conus $mesh
+
+#Interpolate wind fields to unstructured mesh
+python InterpolateWithWeights.py $nbm_oc_uv $nbm_oc_wghts $rwps_oc $windvars 0
+python InterpolateWithWeights.py $rrfs_pr $rrfs_pr_wghts $rwps_pr $windvars -1
+python InterpolateWithWeights.py $rrfs_hi $rrfs_hi_wghts $rwps_hi $windvars -1
+python InterpolateWithWeights.py $rrfs_ak $rrfs_ak_wghts $rwps_ak $windvars -1
+python InterpolateWithWeights.py $rrfs_na $rrfs_na_wghts $rwps_na $windvars -1
+python InterpolateWithWeights.py $rrfs_conus $rrfs_conus_wghts $rwps_conus $windvars -1
+
+#Add mesh geometry x,y,e to interpolated files
+python AddMeshGeomToFile.py $rwps_oc $mesh
+python AddMeshGeomToFile.py $rrfs_hi $mesh
+python AddMeshGeomToFile.py $rrfs_pr $mesh
+python AddMeshGeomToFile.py $rrfs_ak $mesh
+python AddMeshGeomToFile.py $rrfs_na $mesh
+python AddMeshGeomToFile.py $rrfs_conus $mesh
+
+python InterpTime.py $rwps_oc $rwps_pr $rwps_oc_ti $windvars  
+
+# Add error covariance field to files with interpolated fields for bayesian update
+# Based on distance to boundary of input field and commant line parameters InternalVariance:BoundaryVariance:LengthScale(km) 
+python AddErrVarToFile.py $rwps_oc_ti $nbm_oc_dist 100.
+python AddErrVarToFile.py $rwps_hi $rrfs_hi_dist 4.:40.:200.
+python AddErrVarToFile.py $rwps_pr $rrfs_pr_dist 4.:40.:150.
+python AddErrVarToFile.py $rwps_ak $rrfs_ak_dist 9.:90.:500.
+python AddErrVarToFile.py $rwps_conus $rrfs_conus_dist 16.:160.:1000.
+python AddErrVarToFile.py $rwps_na $rrfs_na_dist 50.:500.:1500.
 
 #Interpolate NBM in time to times within the NBM forecast covered by the RRFS forecast 
-python InterpTimeNBM.py $rwps_oc $rwps_pr $rwps_oc_ti 
-
-python BlendWindForecasts.py $rwps_oc_ti $rwps_pr blend1.nc
-python BlendWindForecasts.py blend1.nc $rwps_hi blend2.nc
-python BlendWindForecasts.py blend2.nc $rwps_ak blend3.nc
-python BlendWindForecasts.py blend3.nc $rwps_conus blend4.nc
-python BlendWindForecasts.py blend4.nc $rwps_na $rwps_est
+python BayesForecastUpdate.py $rwps_oc_ti $rwps_pr blend1.nc $windvars
+python BayesForecastUpdate.py blend1.nc $rwps_hi blend2.nc $windvars
+python BayesForecastUpdate.py blend2.nc $rwps_ak blend3.nc $windvars
+python BayesForecastUpdate.py blend3.nc $rwps_conus blend4.nc $windvars
+python BayesForecastUpdate.py blend4.nc $rwps_na $rwps_est $windvars
 
