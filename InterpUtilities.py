@@ -673,17 +673,31 @@ def WriteInterpJobscriptPBS(fl,flin,mshfl,Njobs, ComputeNodes):
     TmpOutDir="STOFSInterpWeights."+mshfl[meshslash:len(mshfl)-4]
     WghtFl="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".txt"
     WghtFlNetCDF="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".nc"
+
+    Njobs=64 #OVERWRITE FOR NOW
     with open(fl, 'w') as f:
+
+
+# From rwps.cron
+#PBS -A RWPS-DEV
+#PBS -l select=1:ncpus=1:mem=100MB
+#PBS -l walltime=02:00:00
+#PBS -q dev
+#PBS -N rwps.boss.lsf
+#PBS -j oe
+#PBS -o rwps.MakeUnstrWghts.out
+#PBS -e rwps.MakeUnstrWghts.out
+
+#PBS -l select=2:ncpus=32:mem=128gb
         f.write("#PBS -N ESMPy\n")
         f.write("#PBS -j oe\n")
         f.write("#PBS -S /bin/bash\n")
         f.write("#PBS -q dev\n")
         f.write("#PBS -A NWPS-DEV\n")
         f.write("#PBS -l walltime=01:00:00\n")
-
         f.write("#PBS -J 1-"+str(Njobs)+"\n")
-        
-        f.write("#PBS -l select=1:ncpus=1:mem=8G\n")
+        f.write("#PBS -l select=2:ncpus=32:mem=128gb\n")
+#        f.write("#PBS -l select=1:ncpus=1:mem=8G\n")
         f.write("#PBS -l place=excl\n")
         f.write("#PBS -l debug=true\n")
 
@@ -700,12 +714,13 @@ def WriteInterpJobscriptPBS(fl,flin,mshfl,Njobs, ComputeNodes):
         f.write("pip list -v\n")
 
         f.write("# calculate interpolation weights in parallel geographically \n")
-        f.write("srun python GeoSubsetInterpolateSTOFS.py "+flin+" "+mshfl+" $SLURM_ARRAY_TASK_ID " + str(Njobs)+" > InterpJob.$SLURM_ARRAY_TASK_ID.out \n")
+        f.write("srun python GeoSubsetInterpolateSTOFS.py "+flin+" "+mshfl+" $PBS_ARRAY_INDEX " + str(Njobs)+" > InterpJob.$PBS_ARRAY_INDEX.out \n")
         f.write("wait\n")
         f.write("# concatonate different parts of the mesh to common text file \n")
         f.write("cat "+TmpOutDir+"/Part.IntrpWghts.*.txt > "+WghtFl+" \n")
         f.write("# convert output weights to netcdf file \n")
         f.write("python ConvertWeights2Netcdf.py "+flin+" "+mshfl+" \n")
+        print("to run $qsub -r y "+fl)
 
 
 def WriteInterpJobscriptSLURM(fl,flin,mshfl,Njobs, ComputeNodes):

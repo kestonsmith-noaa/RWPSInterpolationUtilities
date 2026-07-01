@@ -33,15 +33,22 @@ date=$1
 cycl=$2
 mesh=$3
 
+Nprocs=50
+
 meshname="${mesh##*/}"
 meshname="${meshname: 0: -4}"
 
-outdir=$meshname.$date.$cycl
+outdir=$stofs.$meshname.$date.$cycl
 
 stofsele="stofs.$date.$cycl/stofs_2d_glo.t"$cycl"z.fields.cwl.nc"
 stofsvel="stofs.$date.$cycl/stofs_2d_glo.t"$cycl"z.fields.cwl.vel.nc"
-rwpsele="$outdir/stofs.$date.$cycl.cwl.nc"
-rwpsvel="$outdir/stofs.$date.$cycl.cwl.vel.nc"
+rwpsele="$outdir/stofs.$meshname.$date.$cycl.cwl.nc"
+rwpsvel="$outdir/stofs.$meshname.$date.$cycl.cwl.vel.nc"
+
+intrpwghts="InterpolationWeights.$meshname.stofs.nc"
+
+
+[ ! -f "$interpwghts" ] && sh ../ComputeUnstrToRWPSInterpWeights.sh $stofsele $mesh $Nprocs
 
 mkdir $outdir
 
@@ -50,6 +57,9 @@ echo "stofs    mesh=$mesh"
 echo "stofs rwpsele=$rwpsele"
 echo "stofs rwpsvel=$rwpsvel"
 
-python InterpolateSTOFS.py $stofsele $mesh $rwpsele zeta -2
-python InterpolateSTOFS.py $stofsvel $mesh $rwpsvel u-vel:v-vel -2
+python ../InterpolateWithWeightsAndErrorVariance.py $stofsele $mesh $rwpsele zeta 0
+python ../InterpolateWithWeightsAndErrorVariance.py $stofsvel $mesh $rwpsvel u-vel:v-vel 0
+
+#python InterpolateSTOFS.py $stofsele $mesh $rwpsele zeta 0
+#python InterpolateSTOFS.py $stofsvel $mesh $rwpsvel u-vel:v-vel 0
 
