@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 import sys
-import GeoComputeMeshToMeshInterpWeights as mshint
+#import GeoComputeMeshToMeshInterpWeights as mshint
 import InterpUtilities as  iutil
 import scipy.sparse as sp
 
@@ -14,7 +14,8 @@ meshslash=mshfl.rfind('/')+1
 #AddExtrapolationSupport=False
 AddExtrapolationSupport=True
 
-TextWeightFl="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".txt"
+#TextWeightFl="STOFS.wght."+mshfl[meshslash:len(mshfl)-4]+".txt"
+TextWeightFl="InterpWeights."+mshfl[meshslash:len(mshfl)-4]+".stofs.txt"
 flout = "InterpolationWeights."+mshfl[meshslash:len(mshfl)-3]+".stofs.nc"
 
 xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
@@ -62,7 +63,7 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     ncout.createDimension('n_s' , n_s)
     ncout.setncattr("Nrows", nn_dst)
     ncout.setncattr("Ncols", nn_src)
-    ncadd.setncattr("SrcFieldType", "unstructured") 
+    ncout.setncattr("SrcFieldType", "unstructured") 
     
     r_var=ncout.createVariable('row', 'i4', ('n_s',))
     r_var.long_name     = 'row index'
@@ -103,7 +104,8 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
         zdst_var.long_name     = 'interpolation destination node latitude'
         zdst_var[:]=zi[:]
 
-Extrapolate=False
+#Extrapolate=False
+Extrapolate=sys.argv[3]
 
 if Extrapolate:
     dist2bnd=np.full(len(xi), np.inf) #all points are inside boundary- No boundary with this type of extrapolation
@@ -119,7 +121,7 @@ else:
 
 dist2bnd_file = "DistToBndy."+mshfl[meshslash:len(mshfl)-3]+".stofs.nc"
 with nc.Dataset(dist2bnd_file, 'w', format='NETCDF4') as ncout:
-    ncout.createDimension('node' , nn)
+    ncout.createDimension('node' , nn_dst)
     d_var=ncout.createVariable('dist2bnd', 'f4', ('node',))
     d_var.long_name     = 'distance to boundary'
     d_var.units         = 'km'
