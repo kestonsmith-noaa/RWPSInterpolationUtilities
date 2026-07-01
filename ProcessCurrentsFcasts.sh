@@ -48,7 +48,7 @@ rtofscur="rtofs/rtofs.20260630.nc"
 
 varnames="u-vel:v-vel"
 
-combinedcur=$meshname.stofsxrtofs.nc
+combinedcur=$meshname.$date.$cycl.vel.stofsxrtofs.nc
 
 
 ## STOFS interpolation
