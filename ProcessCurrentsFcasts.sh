@@ -21,19 +21,9 @@ module load ve/hafs/2.1
 
 pip list -v
 
-
-#-rw-r--r-- 1 keston.smith couple  16G Jul  1 13:32 rtofs/rtofs.20260629.nc
-#-rw-r--r-- 1 keston.smith couple 733M Jul  1 16:12 rtofs/RWPS.V0a.small.rtofs.20260629.nc
-#-rw-r--r-- 1 keston.smith couple 1.3G Jul  1 17:42 stofs/RWPS.V0a.small.20260630.vel.cwl.stofs.nc
-#-rw-r--r-- 1 keston.smith couple 617M Jul  1 17:44 stofs/RWPS.V0a.small.20260630.cwl.stofs.nc
-
-
-
-
-##date="20260527"
-#date=20260602
+#date="20260602"
 #cycl="00"
-#mesh=meshes/RWPS.V0a.small.msh
+#mesh="meshes/RWPS.V0a.small.msh"
 
 date=$1
 cycl=$2
@@ -43,13 +33,12 @@ mesh=$3
 meshname="${mesh##*/}"
 meshname="${meshname: 0: -4}"
 
-stofscur="stofs/stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.vel.nc"
+stofscur="stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.vel.nc"
 rtofscur="rtofs/rtofs.20260630.nc"
 
 varnames="u-vel:v-vel"
 
 combinedcur=$meshname.$date.$cycl.vel.stofsxrtofs.nc
-
 
 ## STOFS interpolation
 stofs_whgts="InterpolationWeights.$meshname.stofs.nc"
