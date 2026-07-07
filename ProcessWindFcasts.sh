@@ -29,7 +29,8 @@ pip list -v
 date=$1
 cycl=$2
 mesh=$3
-winddir="forecasts/wind.$date.$cycl"
+#winddir="forecasts/wind.$date.$cycl"
+winddir="wind.$date.$cycl"
 windvars="UGRD_10maboveground:VGRD_10maboveground"
 # extract mesh name from path
 meshname="${mesh##*/}"
