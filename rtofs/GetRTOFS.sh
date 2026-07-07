@@ -30,4 +30,4 @@ flout="rtofs.$date.nc"
 
 mkdir $tmpdir
 cp $filesin $tmpdir/
-python GetRTOFSfcst.py $tmpdir $flout
+python rtofs/GetRTOFSfcst.py $tmpdir $flout

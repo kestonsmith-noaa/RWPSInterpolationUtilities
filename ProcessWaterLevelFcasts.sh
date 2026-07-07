@@ -21,9 +21,15 @@ module load ve/hafs/2.1
 
 pip list -v
 
-date=$1
-cycl=$2
-mesh=$3
+#date=$1
+#cycl=$2
+#mesh=$3
+
+cdir=$(pwd)
+
+echo "directory : $cdir"
+
+source ./PDY_rwps
 
 meshname="${mesh##*/}"
 meshname="${meshname: 0: -4}"
@@ -33,9 +39,14 @@ stofslev="stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.nc"
 varnames="zeta"
 
 ## STOFS interpolation
-stofs_whgts="InterpolationWeights.$meshname.stofs.nc"
+stofs_wghts="InterpolationWeights.$meshname.stofs.nc"
 stofs_dists="DistToBndy.$meshname.stofs.nc"
 stofs_rwps="$meshname.$date.$cycl.cwl.stofs.nc"
+
+
+echo "$meshname"
+echo "$stofs_wghts"
+echo "$stofs_rwps"
 
 if [ ! -f "$stofs_wghts" ]; then
     echo "missing stofs interpolation weights file: $stofs_wghts"
@@ -48,7 +59,7 @@ if [ ! -f "$stofs_dists" ]; then
     exit 1
 fi
 
-python InterpolateWithWeights.py $stofslev $stofs_whgts $stofs_rwps $varnames 0 
+python InterpolateWithWeights.py $stofslev $stofs_wghts $stofs_rwps $varnames 0 
 python AddMeshGeomToFile.py $stofs_rwps $mesh
 ##python AddErrVarToFile.py $stofs_rwps $stofs_dists 1.
 

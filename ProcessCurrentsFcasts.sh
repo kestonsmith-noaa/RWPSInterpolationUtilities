@@ -41,7 +41,7 @@ varnames="u-vel:v-vel"
 combinedcur=$meshname.$date.$cycl.vel.stofsxrtofs.nc
 
 ## STOFS interpolation
-stofs_whgts="InterpolationWeights.$meshname.stofs.nc"
+stofs_wghts="InterpolationWeights.$meshname.stofs.nc"
 stofs_dists="DistToBndy.$meshname.stofs.nc"
 stofs_rwps="$meshname.$date.$cycl.vel.cwl.stofs.nc"
 
@@ -56,12 +56,12 @@ if [ ! -f "$stofs_dists" ]; then
     exit 1
 fi
 
-python InterpolateWithWeights.py $stofscur $stofs_whgts $stofs_rwps $varnames 0 &
+python InterpolateWithWeights.py $stofscur $stofs_wghts $stofs_rwps $varnames 0 &
 
 
 ## RTOFS interpolation
 rtofs_rwps="$meshname.$date.vel.rtofs.nc"
-rtofs_whgts="InterpolationWeights.$meshname.rtofs.nc"
+rtofs_wghts="InterpolationWeights.$meshname.rtofs.nc"
 rtofs_dists="DistToBndy.$meshname.rtofs.nc"
 
 if [ ! -f "$rtofs_wghts" ]; then
@@ -75,7 +75,7 @@ if [ ! -f "$rtofs_dists" ]; then
     exit 2
 fi
 
-python InterpolateWithWeights.py $rtofscur $rtofs_whgts $rtofs_rwps $varnames -1 &
+python InterpolateWithWeights.py $rtofscur $rtofs_wghts $rtofs_rwps $varnames -1 &
 
 wait;
 
