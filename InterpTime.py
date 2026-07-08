@@ -7,12 +7,24 @@ import math
 
 from scipy.interpolate import interp1d
 
+nargin = len(sys.argv) - 1
+
 flin=sys.argv[1] 
 flinNewTimes=sys.argv[2] 
 flout=sys.argv[3] 
+
 varname0=sys.argv[4]
 varname=varname0.split(":")
 nvar=len(varname)
+
+# If InterpSecondFile is True interpolate  the values from the second file are interpolated to the common time points
+# and extrapolate (via persistance) for all times beyond the range of  time from the second file
+
+InterpSecondFile=False
+if nargin>4:
+    InterpSecondFile=eval(sys.argv[5])
+    print("Interpolating fields from second file: "+str(InterpSecondFile)+" and extrapolating via persistance in time")
+
 #might want to rewrite with an input file to derive full set of times
 print("running InterpTime.py: takes a forecast (arg1="+flin+") and interpolates to times ")
 print("in another file (arg2="+flinNewTimes+"). The origonal and interpoated values are output to ")
@@ -54,17 +66,26 @@ ne=e.shape[1]
 noel=e.shape[0]
 
 InterpolatedVariables=np.zeros((nvar,nt,nn))
+
+IsExtrap=False
+if InterpSecondFile:
+    t=t1
+    data=data1
+    IsExtrap=True
+else:
+    data=data0
+
+ntt=len(t)
+
 for jv in range(nvar):
-    u=np.asarray(data0[varname[jv]][:,:])
-    fill_value0 = data0[varname[jv]]._FillValue
+    u=np.asarray(data[varname[jv]][:,:])
+    fill_value0 = data[varname[jv]]._FillValue
     nan=float('nan')
     jb=np.where(u==fill_value0)
     u[jb]=nan
     #set up interpolator for u
     fi = interp1d(t, u, axis=0, kind='linear')
     uf=fi(tf)
-    print(uf.shape)
-    print(u.shape)
     #re-insert initial values at times that match initial time points
     print("Interpolation compleate: now re-insert initial values at times that match initial time points")
     print("to remove small interpolation artifacts")
@@ -76,6 +97,15 @@ for jv in range(nvar):
             print("mapping exactly back to origonal values at time: "+str(tf[k]))
             j=j[0]
             uf[k,:]=u[j,:]
+
+    if IsExtrap:
+        jExtrapEarly=np.where(tf<t[0])
+        for jxtrp in range(len(jExtrapEarly)):
+            uf[jExtrapEarly[jxtrp],:]=u[0,:]
+        jExtrapLate=np.where(tf>t[ntt-1])
+        for jxtrp in range(len(jExtrapLate)):
+            uf[jExtrapLate[jxtrp],:]=u[ntt-1,:]
+
     InterpolatedVariables[jv,:,:]=uf[:,:]
 
 import InterpUtilities as iutil
