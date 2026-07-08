@@ -99,31 +99,38 @@ fi
 [ ! -f "$rrfs_conus_wghts" ] && python ComputeGriddedToRWPSInterpWeights.py $rrfs_conus $mesh
 
 #Interpolate wind fields to unstructured mesh
-python InterpolateWithWeights.py $nbm_oc_uv $nbm_oc_wghts $rwps_oc $windvars 0
-python InterpolateWithWeights.py $rrfs_pr $rrfs_pr_wghts $rwps_pr $windvars -1
-python InterpolateWithWeights.py $rrfs_hi $rrfs_hi_wghts $rwps_hi $windvars -1
-python InterpolateWithWeights.py $rrfs_ak $rrfs_ak_wghts $rwps_ak $windvars -1
-python InterpolateWithWeights.py $rrfs_na $rrfs_na_wghts $rwps_na $windvars -1
-python InterpolateWithWeights.py $rrfs_conus $rrfs_conus_wghts $rwps_conus $windvars -1
+#python InterpolateWithWeights.py $nbm_oc_uv $nbm_oc_wghts $rwps_oc $windvars 0 &
+python InterpolateWithWeights.py $nbm_oc_uv $nbm_oc_wghts $rwps_oc $windvars 3 &
+python InterpolateWithWeights.py $rrfs_pr $rrfs_pr_wghts $rwps_pr $windvars -1 &
+python InterpolateWithWeights.py $rrfs_hi $rrfs_hi_wghts $rwps_hi $windvars -1 &
+python InterpolateWithWeights.py $rrfs_ak $rrfs_ak_wghts $rwps_ak $windvars -1 &
+python InterpolateWithWeights.py $rrfs_na $rrfs_na_wghts $rwps_na $windvars -1 &
+python InterpolateWithWeights.py $rrfs_conus $rrfs_conus_wghts $rwps_conus $windvars -1 &
+
+wait;
 
 #Add mesh geometry x,y,e to interpolated files
-python AddMeshGeomToFile.py $rwps_oc $mesh
-python AddMeshGeomToFile.py $rrfs_hi $mesh
-python AddMeshGeomToFile.py $rrfs_pr $mesh
-python AddMeshGeomToFile.py $rrfs_ak $mesh
-python AddMeshGeomToFile.py $rrfs_na $mesh
-python AddMeshGeomToFile.py $rrfs_conus $mesh
+python AddMeshGeomToFile.py $rwps_oc $mesh &
+python AddMeshGeomToFile.py $rrfs_hi $mesh &
+python AddMeshGeomToFile.py $rrfs_pr $mesh &
+python AddMeshGeomToFile.py $rrfs_ak $mesh &
+python AddMeshGeomToFile.py $rrfs_na $mesh &
+python AddMeshGeomToFile.py $rrfs_conus $mesh &
+
+wait;
 
 python InterpTime.py $rwps_oc $rwps_pr $rwps_oc_ti $windvars  
 
 # Add error covariance field to files with interpolated fields for bayesian update
 # Based on distance to boundary of input field and commant line parameters InternalVariance:BoundaryVariance:LengthScale(km) 
-python AddErrVarToFile.py $rwps_oc_ti $nbm_oc_dist 100.
-python AddErrVarToFile.py $rwps_hi $rrfs_hi_dist 4.:40.:200.
-python AddErrVarToFile.py $rwps_pr $rrfs_pr_dist 4.:40.:150.
-python AddErrVarToFile.py $rwps_ak $rrfs_ak_dist 9.:90.:500.
-python AddErrVarToFile.py $rwps_conus $rrfs_conus_dist 16.:160.:1000.
-python AddErrVarToFile.py $rwps_na $rrfs_na_dist 50.:500.:1500.
+python AddErrVarToFile.py $rwps_oc_ti $nbm_oc_dist 100. &
+python AddErrVarToFile.py $rwps_hi $rrfs_hi_dist 4.:40.:200. &
+python AddErrVarToFile.py $rwps_pr $rrfs_pr_dist 4.:40.:150. &
+python AddErrVarToFile.py $rwps_ak $rrfs_ak_dist 9.:90.:500. &
+python AddErrVarToFile.py $rwps_conus $rrfs_conus_dist 16.:160.:1000. &
+python AddErrVarToFile.py $rwps_na $rrfs_na_dist 50.:500.:1500. &
+
+wait;
 
 #Interpolate NBM in time to times within the NBM forecast covered by the RRFS forecast 
 python BayesForecastUpdate.py $rwps_oc_ti $rwps_pr blend1.nc $windvars

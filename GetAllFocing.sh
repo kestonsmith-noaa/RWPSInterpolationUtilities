@@ -38,14 +38,14 @@ rm FetchWinds.out ProcWinds.out FetchCurrents.out ProcCurrents.out FetchWaterLev
     echo "retrieving rtofs and stofs currents for $date z$cycl"
     sh GetCurrents.sh $date $cycl > FetchCurrents.out
     echo "processing currents for $date z$cycl for $mesh"
-    sh ProcessCurrentsFcasts.sh $date $cycl $mesh  > ProcCurrents.out
+    sh ProcessCurrents.sh $date $cycl $mesh  > ProcCurrents.out
 )&
 
 (
     echo "retrieving stofs water level for $date z$cycl"
     sh GetWaterLevel.sh $date $cycl > FetchWaterLevel.out
     echo "processing water level for $date z$cycl for $mesh"
-    sh ProcessWaterLevelFcasts.sh $date $cycl $mesh  > ProcWaterLevel.out
+    sh ProcessWaterLevel.sh $date $cycl $mesh  > ProcWaterLevel.out
 )&
 
 wait

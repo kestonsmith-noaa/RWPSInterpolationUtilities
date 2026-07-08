@@ -18,12 +18,8 @@ module load hdf5-C/1.14.0
 module load netcdf-C/4.9.2
 module load esmf-C/8.6.0
 module load ve/hafs/2.1
-stofs.20260630.00/stofs_2d_glo.t00z.fields.cwl.nc
-stofs.20260630.00/stofs_2d_glo.t00z.fields.cwl.vel.nc
 
 pip list -v
-#stofs.20260630.00/stofs_2d_glo.t00z.fields.cwl.nc
-#stofs.20260630.00/stofs_2d_glo.t00z.fields.cwl.vel.nc
 
 #date=20260602
 #cycl=00

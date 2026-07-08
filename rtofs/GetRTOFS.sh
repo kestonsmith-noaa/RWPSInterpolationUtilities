@@ -21,7 +21,6 @@ module load ve/hafs/2.1
 
 pip list -v
 
-#date=20260602
 date=$1
 
 tmpdir="tmp.rtofs.$date"
@@ -31,4 +30,5 @@ flout="rtofs.$date.nc"
 mkdir $tmpdir
 cp $filesin $tmpdir/
 python rtofs/GetRTOFSfcst.py $tmpdir $flout
+
 rm -rf $tmpdir
