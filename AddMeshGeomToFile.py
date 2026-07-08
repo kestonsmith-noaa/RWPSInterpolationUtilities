@@ -28,7 +28,8 @@ xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nn=len(xi)
 ne=ei.shape[0]
 
-with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
+#with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
+with nc.Dataset(flinout, 'a', format='NETCDF4') as ncadd:
     if not 'node' in ncadd.dimensions:
         ncadd.createDimension('node' , nn)
     if not 'element' in ncadd.dimensions:
@@ -39,7 +40,8 @@ with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
     ncadd.mesh=mshfl
     
     if not 'longitude' in ncadd.variables:
-        lon_var=ncadd.createVariable('longitude', 'f8', ('node',))
+#        lon_var=ncadd.createVariable('longitude', 'f8', ('node',))
+        lon_var=ncadd.createVariable('longitude', 'f8', ('node',),zlib=False)
         lon_var.units         = 'degree_east'
         lon_var.long_name     = 'longitude'
         lon_var.standard_name = 'longitude'
@@ -47,7 +49,7 @@ with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
         lon_var[:]=xi[:]
 
     if not 'latitude' in ncadd.variables:
-        lat_var=ncadd.createVariable('latitude', 'f8', ('node',))
+        lat_var=ncadd.createVariable('latitude', 'f8', ('node',),zlib=False)
         lat_var.units         = 'degree_north'
         lat_var.long_name     = 'latitude'
         lat_var.standard_name = 'latitude'
@@ -55,7 +57,7 @@ with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
         lat_var[:]=yi[:]
 
     if not 'tri' in ncadd.variables:
-        tri_var=ncadd.createVariable('tri', 'i4', ('noel','element'))
+        tri_var=ncadd.createVariable('tri', 'i4', ('noel','element'),zlib=False)
         tri_var.long_name     = 'element list'
         tri_var.standard_name = 'element list'
         tri_var[:]=np.transpose(ei)

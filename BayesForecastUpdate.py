@@ -17,6 +17,7 @@ nvar=len(varname)
 data0 = nc.Dataset(flin0,"r")
 t=np.asarray(data0["time"][:])
 var=np.asarray(data0["ErrorVariance"][:,:])
+
 x=np.asarray(data0["longitude"][:])
 y=np.asarray(data0["latitude"][:])
 e=np.asarray(data0["tri"][:,:])
@@ -87,11 +88,11 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     lat_var.standard_name = 'latitude'
     lat_var.axis          = 'Y'
     lat_var[:]=y[:]
-        
+
     time_var=ncout.createVariable('time', 'f4', ('time',))
     iutil.CopyAttributes(data0["time"], time_var)
     time_var[:]=t[:]
-    
+
     tri_var=ncout.createVariable('tri', 'i4', ('noel','element'))
     tri_var.long_name     = 'element list'
     tri_var.standard_name = 'element list'
