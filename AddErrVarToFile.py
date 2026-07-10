@@ -63,7 +63,8 @@ if VariableType=="Wind":
         VarLambda   = float(VarParam[2]) # lengthscale (km) for linear transition from bounadry variance to interior variance
         Variance = iutil.VarianceLinearDistanceToBndy( dist2bnd, VarInterior, VarBoundary,VarLambda )
 
-with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
+#with nc.Dataset(flinout, 'r+', format='NETCDF4') as ncadd:
+with nc.Dataset(flinout, 'a', format='NETCDF4') as ncadd:
     time=np.asarray(ncadd["time"][:])
     nt=len(time)
     ErrorVariance=np.zeros((nt,nn))

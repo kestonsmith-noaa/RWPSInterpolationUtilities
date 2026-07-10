@@ -17,7 +17,7 @@ xi, yi, ei, zi = iutil.loadWW3Mesh(mshfl)
 nn=len(xi)
 ne=ei.shape[0]
 
-fltmp="tmp."+flin
+fltmp=flin+".tmp.nc"
 try:
     os.remove(fltmp)
 except:

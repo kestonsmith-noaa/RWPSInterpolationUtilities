@@ -63,7 +63,7 @@ if VariableType=="Wind":
         VarLambda   = float(VarParam[2]) # lengthscale (km) for linear transition from bounadry variance to interior variance
         Variance = iutil.VarianceLinearDistanceToBndy( dist2bnd, VarInterior, VarBoundary,VarLambda )
 
-fltmp="tmp."+flin
+fltmp=flin+".tmp.nc"
 try:
     os.remove(fltmp)
 except:

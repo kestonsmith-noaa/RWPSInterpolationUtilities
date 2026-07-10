@@ -110,12 +110,12 @@ python InterpolateWithWeights.py $rrfs_conus $rrfs_conus_wghts $rwps_conus $wind
 wait;
 
 #Add mesh geometry x,y,e to interpolated files
-python AddMeshGeomToFile.py $rwps_oc $mesh &
-python AddMeshGeomToFile.py $rrfs_hi $mesh &
-python AddMeshGeomToFile.py $rrfs_pr $mesh &
-python AddMeshGeomToFile.py $rrfs_ak $mesh &
-python AddMeshGeomToFile.py $rrfs_na $mesh &
-python AddMeshGeomToFile.py $rrfs_conus $mesh &
+python AddMeshGeomToFile0.py $rwps_oc $mesh &
+python AddMeshGeomToFile0.py $rrfs_hi $mesh &
+python AddMeshGeomToFile0.py $rrfs_pr $mesh &
+python AddMeshGeomToFile0.py $rrfs_ak $mesh &
+python AddMeshGeomToFile0.py $rrfs_na $mesh &
+python AddMeshGeomToFile0.py $rrfs_conus $mesh &
 
 wait;
 
@@ -123,12 +123,12 @@ python InterpTime.py $rwps_oc $rwps_pr $rwps_oc_ti $windvars
 
 # Add error covariance field to files with interpolated fields for bayesian update
 # Based on distance to boundary of input field and commant line parameters InternalVariance:BoundaryVariance:LengthScale(km) 
-python AddErrVarToFile.py $rwps_oc_ti $nbm_oc_dist 100. &
-python AddErrVarToFile.py $rwps_hi $rrfs_hi_dist 4.:40.:200. &
-python AddErrVarToFile.py $rwps_pr $rrfs_pr_dist 4.:40.:150. &
-python AddErrVarToFile.py $rwps_ak $rrfs_ak_dist 9.:90.:500. &
-python AddErrVarToFile.py $rwps_conus $rrfs_conus_dist 16.:160.:1000. &
-python AddErrVarToFile.py $rwps_na $rrfs_na_dist 50.:500.:1500. &
+python AddErrVarToFile0.py $rwps_oc_ti $nbm_oc_dist 100. &
+python AddErrVarToFile0.py $rwps_hi $rrfs_hi_dist 4.:40.:200. &
+python AddErrVarToFile0.py $rwps_pr $rrfs_pr_dist 4.:40.:150. &
+python AddErrVarToFile0.py $rwps_ak $rrfs_ak_dist 9.:90.:500. &
+python AddErrVarToFile0.py $rwps_conus $rrfs_conus_dist 16.:160.:1000. &
+python AddErrVarToFile0.py $rwps_na $rrfs_na_dist 50.:500.:1500. &
 
 wait;
 

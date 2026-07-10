@@ -82,11 +82,11 @@ python InterpolateWithWeights.py $rtofscur $rtofs_wghts $rtofs_rwps $varnames -1
 
 wait;
 
-python AddMeshGeomToFile.py $rtofs_rwps $mesh
-python AddMeshGeomToFile.py $stofs_rwps $mesh
+python AddMeshGeomToFile0.py $rtofs_rwps $mesh
+python AddMeshGeomToFile0.py $stofs_rwps $mesh
 
-#python AddErrVarToFile.py $rtofs_rwps $rtofs_dists 100.:1.:50.:250.:50.
-#python AddErrVarToFile.py $stofs_rwps $stofs_dists 1.:100.:50.:250.
+#python AddErrVarToFile0.py $rtofs_rwps $rtofs_dists 100.:1.:50.:250.:50.
+#python AddErrVarToFile0.py $stofs_rwps $stofs_dists 1.:100.:50.:250.
 
 #interpolate from stofs to common stofs and rtofs times within range of stofs time
 python InterpTime.py $stofs_rwps $rtofs_rwps $stofs_rwps_ti $varnames False &
@@ -97,8 +97,8 @@ python InterpTime.py $stofs_rwps $rtofs_rwps $rtofs_rwps_ti $varnames True &
 
 wait
 
-python AddErrVarToFile.py $rtofs_rwps_ti $rtofs_dists 100.:1.:50.:250.:50.
-python AddErrVarToFile.py $stofs_rwps_ti $stofs_dists 1.:100.:50.:250.
+python AddErrVarToFile0.py $rtofs_rwps_ti $rtofs_dists 100.:1.:50.:250.:50.
+python AddErrVarToFile0.py $stofs_rwps_ti $stofs_dists 1.:100.:50.:250.
 
 python BayesForecastUpdate.py $stofs_rwps_ti $rtofs_rwps_ti $combinedcur $varnames
 

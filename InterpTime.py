@@ -76,16 +76,25 @@ else:
     data=data0
 
 ntt=len(t)
-
+#unique_vals, indices = np.unique(arr, return_index=True)
+tu,indx=np.unique(t,return_index=True)
 for jv in range(nvar):
     u=np.asarray(data[varname[jv]][:,:])
     fill_value0 = data[varname[jv]]._FillValue
     nan=float('nan')
     jb=np.where(u==fill_value0)
     u[jb]=nan
-    #set up interpolator for u
-    fi = interp1d(t, u, axis=0, kind='linear')
+
+#set up interpolator for u
+#    fi = interp1d(t, u, axis=0, kind='linear')
+#    fi = interp1d(t, u, axis=0, kind='linear',fill_value=np.nan)
+#    fi = interp1d(tu, u[indx,:], axis=0, kind='linear',fill_value=np.nan)
+    if IsExtrap:
+        fi = interp1d(tu, u[indx,:], axis=0, kind='linear',fill_value="extrapolate") #extrapolated values will be overwritten
+    else:
+        fi = interp1d(tu, u[indx,:], axis=0, kind='linear')
     uf=fi(tf)
+
     #re-insert initial values at times that match initial time points
     print("Interpolation compleate: now re-insert initial values at times that match initial time points")
     print("to remove small interpolation artifacts")

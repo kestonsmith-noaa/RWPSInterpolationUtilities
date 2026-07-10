@@ -31,7 +31,7 @@ echo "directory : $curdir"
 meshname="${mesh##*/}"
 meshname="${meshname: 0: -4}"
 
-stofslev="stofs.$date.$cycl/stofs_2d_glo.t00z.fields.cwl.nc"
+stofslev="stofs.$date.$cycl/stofs_2d_glo.t${cycl}z.fields.cwl.nc"
 
 varnames="zeta"
 
@@ -56,6 +56,6 @@ if [ ! -f "$stofs_dists" ]; then
 fi
 
 python InterpolateWithWeights.py $stofslev $stofs_wghts $stofs_rwps $varnames 0 
-python AddMeshGeomToFile.py $stofs_rwps $mesh
-python AddErrVarToFile.py $stofs_rwps $stofs_dists 1.
+python AddMeshGeomToFile0.py $stofs_rwps $mesh
+python AddErrVarToFile0.py $stofs_rwps $stofs_dists 1.
 
