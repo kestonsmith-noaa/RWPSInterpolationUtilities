@@ -111,13 +111,21 @@ for jv in range(nvar):
         elif len(vshp)==2: 
             var=np.asarray(data[varname[jv]][k,:])
         elif len(vshp)==3: # Wind field with dimensions time, x, y
-            var0=np.asarray(data[varname[jv]][k,:,:])
-            var=np.transpose(var0).reshape(n1)                
+            if "wind" in flin:
+                var0=np.asarray(data[varname[jv]][k,:,:])
+                var=np.transpose(var0).reshape(n1)
+            elif "ice" in flin:
+                var0=np.asarray(data[varname[jv]][k,:,:])
+                if "rtofs" in flin: #remove bad geometry edges
+                    var0=var0[1:-1,1:-1]
+                var=np.transpose(var0).reshape(n1)
+
         elif len(vshp)==4: # RTOFS field with 2nd dimensional "Level" and garbage boundries
             var0=np.asarray(data[varname[jv]][k,0,:,:])
             if "rtofs" in flin: #remove bad geometry edges
                 var0=var0[1:-1,1:-1]
-            var=np.transpose(var0).reshape(n1)                
+            var=np.transpose(var0).reshape(n1)
+            
         else:
             print(vshp)
             print(len(vshp))

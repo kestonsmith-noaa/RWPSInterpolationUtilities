@@ -44,6 +44,15 @@ echo " " >> $jobcard
 echo "rm FetchWinds.out ProcWinds.out FetchCurrents.out ProcCurrents.out FetchWaterLevel.out ProcWaterLevel.out" >> $jobcard
 echo " " >> $jobcard
 
+
+# At present RTOFS ice files are missing time information (MT==0) so ProcessIce.sh will fail at the time interpolation step
+echo "(" >> $jobcard
+echo "    sh GetIce.sh $date $cycl > FetchIce.out" >> $jobcard
+echo "    sh ProcessIce.sh $date $cycl $mesh  > ProcIce.out" >> $jobcard
+echo ")&" >> $jobcard
+echo " " >> $jobcard
+
+
 echo "(" >> $jobcard
 echo "    sh GetWaterLevel.sh $date $cycl > FetchWaterLevel.out" >> $jobcard
 echo "    sh ProcessWaterLevel.sh $date $cycl $mesh  > ProcWaterLevel.out" >> $jobcard

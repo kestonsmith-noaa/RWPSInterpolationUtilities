@@ -28,6 +28,8 @@ elif "uv" in flin:
     VariableType="Current"
 elif "vel" in flin:
     VariableType="Current"
+elif "ice" in flin:
+    VariableType="Ice"
 
 
 if VariableType=="Current":
@@ -62,6 +64,24 @@ if VariableType=="Wind":
         VarBoundary = float(VarParam[1]) # variance (m/s)**2 for boundary of forecast
         VarLambda   = float(VarParam[2]) # lengthscale (km) for linear transition from bounadry variance to interior variance
         Variance = iutil.VarianceLinearDistanceToBndy( dist2bnd, VarInterior, VarBoundary,VarLambda )
+
+
+if VariableType=="Ice":
+    ##LocalFS  = [ rwps_pr, rwps_hi, rwps_ak, rwps_conus, rwps_na] # file names
+    ##VarFS    = [ 4.     , 4.    , 9.      , 16.       , 25.    ] # (m m /s /s)
+    ##LambdaFS = [ 150.   , 200.  , 500.    , 1000.     , 1500.  ] # (km)
+    VarInterior=float(VarParam[0]) # variance (m/s)**2 for interior of forecast
+    if "rtofs" in flin:
+        Variance = VarInterior + np.zeros(nn)
+    if "nbm" in flin:
+        VarBoundary = float(VarParam[1]) # variance (m/s)**2 for boundary of forecast
+        VarLambda   = float(VarParam[2]) # lengthscale (km) for linear transition from bounadry variance to interior variance
+        Variance = iutil.VarianceLinearDistanceToBndy( dist2bnd, VarInterior, VarBoundary,VarLambda )
+
+
+
+
+
 
 fltmp=flin+".tmp.nc"
 try:

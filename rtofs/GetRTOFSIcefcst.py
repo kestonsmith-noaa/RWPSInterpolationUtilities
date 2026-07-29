@@ -17,7 +17,7 @@ flout=sys.argv[2]
 ncfiles = os.listdir(dirin)
 print(ncfiles)
 nt=len(ncfiles)
-k=0    
+k=0
 flin=dirin+"/"+ncfiles[k]
 data=nc.Dataset(flin,"r")
 X=data["Longitude"][:,:]
@@ -78,7 +78,8 @@ with nc.Dataset(flout, 'w', format='NETCDF4') as ncout:
     iutil.CopyAttributes(var, MT_var)
     MT_var[:] = MT[:]
 
-    f_var               = ncout.createVariable('ice_coverage', 'f4', ('time','X','Y'),fill_value    = fill_value0)
+#    f_var               = ncout.createVariable('ice_coverage', 'f4', ('time','X','Y'),fill_value    = fill_value0)
+    f_var               = ncout.createVariable('ICEC_surface', 'f4', ('time','X','Y'),fill_value    = fill_value0)
     var=data["ice_coverage"]
     iutil.CopyAttributes(var, f_var)
     f_var[:,:,:]      = F[:,:,:]
