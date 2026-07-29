@@ -96,7 +96,7 @@ python AddMeshGeomToFile0.py $nbm_rwps $mesh
 #python AddErrVarToFile0.py $stofs_rwps $stofs_dists 1.:100.:50.:250.
 
 #interpolate from stofs to common stofs and rtofs times within range of stofs time
-python InterpTime.py $rtofs_rwps $nbm_rwps $stofs_rwps_ti $varnames False &
+python InterpTime.py $rtofs_rwps $nbm_rwps $nbm_rwps_ti $varnames False &
 
 #interpolate from rtofs to common stofs and rtofs times within range of stofs time
 #values out of range are extrapolated to assuming persistance
