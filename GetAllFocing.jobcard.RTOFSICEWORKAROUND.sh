@@ -76,11 +76,6 @@ echo "    sh GetIce.sh $date $cycl > FetchIce.out" >> $jobcard
 echo "    sh ProcessIce.sh $date $cycl $mesh  > ProcIce.out" >> $jobcard
 echo ")&" >> $jobcard
 echo " " >> $jobcard
-
-
-
-
-
 echo " " >> $jobcard
 
 echo "wait" >> $jobcard
@@ -88,5 +83,11 @@ echo " " >> $jobcard
 echo "cp $meshname.$date.$cycl.cwl.stofs.nc $meshname.$date.$cycl.waterlevel.nc" >> $jobcard
 echo "cp $meshname.$date.$cycl.vel.stofsxrtofs.nc $meshname.$date.$cycl.current.nc" >> $jobcard
 echo "cp rwps_winds.$meshname.$date.$cycl/rwps.est.$meshname.$date.$cycl.wind10m.nc $meshname.$date.$cycl.wind.nc" >> $jobcard
+echo "cp $meshname.$date.$cycl.ice.rtofsxnbm.nc $meshname.$date.$cycl.ice.nc" >> $jobcard
+echo " " >> $jobcard
+
+##Below is only needed because of missing rtofs ice time
+## remove and move this to GetRTOFS.sh and GetRTOFSIce.sh
+## echo "rm -rf tmp.rtofs*.$date" >> $jobcard
 
 qsub $jobcard > $outputfile
